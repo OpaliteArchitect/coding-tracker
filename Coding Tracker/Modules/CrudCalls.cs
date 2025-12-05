@@ -1,47 +1,18 @@
 ﻿using Coding_Tracker.Infrastructure;
-using System.Globalization;
+using Microsoft.EntityFrameworkCore;
 
 namespace Coding_Tracker.Modules
 {
     internal static class CrudCalls
     {
-        public static async Task<List<CodingSession>> GetTable()
+        public static IEnumerable<CodingSession> Cache { get; private set; } = [];
+        public static async Task LoadCacheFromDatabase()
         {
-            using RecordDbContext db = new();
-            var sessions = db.Sessions;
-            return sessions.ToList();
+            await using RecordDbContext db = new();
+            Cache = await db.Sessions.ToListAsync();
         }
 
-        public static async Task<string> AddSession(int startMonth, int startDay, int startYear, int startHour, int startMinute, string startMeridiem,
-            int endMonth, int endDay, int endYear, int endHour, int endMinute, string endMeridiem)
-        {
-            const string format = "MM/dd/yyyy hh:mm tt";
-
-            string startStr = $"{startMonth:D2}/{startDay:D2}/{startYear:D2} {startHour:D2}:{startMinute:D2} {startMeridiem}";
-            string endStr = $"{endMonth:D2}/{endDay:D2}/{endYear:D2} {endHour:D2}:{endMinute:D2} {endMeridiem}";
-
-            DateTimeOffset start;
-            DateTimeOffset end;
-
-            try
-            {
-                start = DateTimeOffset.ParseExact(startStr, format, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal);
-                end = DateTimeOffset.ParseExact(endStr, format, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal);
-            }
-            catch (FormatException)
-            {
-                return "Input date/time format error";
-            }
-
-            if (end <= start)
-            {
-                return "Session end cannot be earlier than session start";
-            }
-
-            return await AddSession(start, end);
-        }
-
-        public static async Task<string> AddSession(DateTimeOffset start, DateTimeOffset end)
+        public static async Task AddSession(DateTimeOffset start, DateTimeOffset end)
         {
             CodingSession cs = new()
             {
@@ -52,7 +23,18 @@ namespace Coding_Tracker.Modules
             await db.Sessions.AddAsync(cs);
             await db.SaveChangesAsync();
 
-            return "Session logged";
+            await LoadCacheFromDatabase();
+        }
+
+        public static async Task<int> DeleteSession(IEnumerable<int> ids)
+        {
+            await using RecordDbContext db = new();
+            var query = db.Sessions.Where(s => ids.Contains(s.Id));
+            int rowsDeleted = await query.ExecuteDeleteAsync();
+
+            await LoadCacheFromDatabase();
+
+            return rowsDeleted;
         }
     }
 }

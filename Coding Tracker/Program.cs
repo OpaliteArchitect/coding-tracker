@@ -1,4 +1,4 @@
-﻿using Coding_Tracker.Modules;
+﻿using static Coding_Tracker.Modules.App;
 
 namespace Coding_Tracker
 {
@@ -7,8 +7,7 @@ namespace Coding_Tracker
         static async Task Main(string[] args)
         {
             Console.CursorVisible = false;
-            App app = new();
-            await app.Run();
+            await Run();
         }
     }
 }

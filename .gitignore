@@ -32,3 +32,5 @@ appsettings*.Staging.json
 *.sqlite
 # MSBuild secrets
 *.secrets.json
+
+**/Notes.txt
