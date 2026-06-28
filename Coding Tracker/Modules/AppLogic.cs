@@ -4,7 +4,7 @@ using static Coding_Tracker.Modules.CrudCalls;
 
 namespace Coding_Tracker.Modules
 {
-    internal static class AppLogic
+    public static class AppLogic
     {
         public static bool InSession { get; private set; } = false;
         public static DateTimeOffset SessionStarted { get; private set; }
