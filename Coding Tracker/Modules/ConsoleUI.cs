@@ -217,13 +217,20 @@ namespace Coding_Tracker.Modules
 
         public static async Task DeleteSessions()
         {
+            var history = await GetHistory();
+            if (!history.Any())
+            {
+                AnsiConsole.Write(new Panel("[palegreen1]No sessions to delete[/]"));
+                return;
+            }
+
             var prompt = new MultiSelectionPrompt<CodingSession>()
                 .Title("Select Option:")
                 .Required()
                 .PageSize(10)
                 .MoreChoicesText("[grey](Move up and down to navigate)[/]")
                 .InstructionsText("[grey](Press [lightgoldenrod1]<space>[/] to mark session, press [red]<enter>[/] to delete)[/]")
-                .AddChoices(await GetHistory())
+                .AddChoices(history)
                 .UseConverter(session =>
                 {
                     var start = session.StartTime.ToString("F");
@@ -250,3 +257,4 @@ namespace Coding_Tracker.Modules
         }
     }
 }
+
